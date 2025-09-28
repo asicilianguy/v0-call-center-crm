@@ -1,61 +1,48 @@
-// app/api/contacts/initialize/route.ts
-import { NextResponse } from 'next/server';
-import clientPromise from '@/lib/mongodb';
-import type { Contact } from '@/lib/types';
-
-export async function POST(request: Request) {
+export async function GET() {
   try {
-    const body = await request.json();
-    const contacts = body.contacts as Contact[];
-    
-    if (!contacts || !Array.isArray(contacts) || contacts.length === 0) {
-      return NextResponse.json(
-        { error: "No contacts provided or invalid format" },
-        { status: 400 }
-      );
-    }
-    
-    const client = await clientPromise;
-    const db = client.db("consignment");
-    
-    // Verifica se la collezione è vuota prima di inizializzare
-    const existingCount = await db.collection("contacts").countDocuments({});
-    
-    if (existingCount > 0) {
-      // La collezione non è vuota, non sovrascriviamo i dati esistenti
-      return NextResponse.json({
-        success: false,
-        message: "Database already initialized",
-        existingCount
-      });
-    }
-    
-    // Inserisci tutti i contatti
-    const result = await db.collection("contacts").insertMany(contacts);
-    
-    // Verifica che i dati siano stati effettivamente inseriti
-    const insertedCount = await db.collection("contacts").countDocuments({});
-    const allInserted = insertedCount === contacts.length;
-    
-    if (!allInserted) {
-      console.error(`Inizializzazione fallita: inseriti ${insertedCount}/${contacts.length} contatti`);
-      
-      return NextResponse.json({ 
-        inserted: result.insertedCount,
-        success: false,
-        message: "Inizializzazione parziale: i dati inseriti non corrispondono ai dati di origine"
-      });
-    }
-    
-    return NextResponse.json({ 
-      inserted: result.insertedCount,
-      success: true 
-    });
+    // Simuliamo il caricamento dei dati CSV
+    const response = await fetch(
+      "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/aziende_con_telefono-iuKXtxvRgCD2MFzShnsS9iJ0sramFS.csv",
+    )
+    const csvText = await response.text()
+
+    // Parse CSV
+    const lines = csvText.split("\n")
+    const headers = lines[0].split(",").map((h) => h.trim().replace(/"/g, ""))
+
+    const contacts = lines
+      .slice(1)
+      .filter((line) => line.trim())
+      .map((line, index) => {
+        const values = line.split(",").map((v) => v.trim().replace(/"/g, ""))
+        return {
+          id: `contact-${index + 1}`,
+          nomeAzienda: values[0] || "",
+          numeroTelefono: values[1] || "",
+          indirizzo: values[2] || "",
+          sito: values[3] || "",
+          stato: "non_contattato" as const,
+          interesse: null,
+          reindirizzato: null,
+          note: "",
+          dataUltimaChiamata: null,
+          dataCreazione: new Date().toISOString(),
+        }
+      })
+
+    return Response.json({
+      success: true,
+      contacts,
+      count: contacts.length,
+    })
   } catch (error) {
-    console.error("Initialization failed:", error);
-    return NextResponse.json(
-      { error: "Failed to initialize contacts", details: String(error) },
-      { status: 500 }
-    );
+    console.error("Errore nel caricamento dei contatti:", error)
+    return Response.json(
+      {
+        success: false,
+        error: "Errore nel caricamento dei dati",
+      },
+      { status: 500 },
+    )
   }
 }
