@@ -536,7 +536,6 @@ Spediamo con UPS, imballaggi rinforzati e sempre con assicurazione inclusa. Al m
           </div>
 
           {/* Lista Contatti */}
-          <div className="overflow-y-auto max-h-[calc(100vh-380px)]" ref={crmContainerRef}>
             {loading ? (
               <div className="flex justify-center items-center p-12">
                 <div className="text-center">
@@ -575,7 +574,6 @@ Spediamo con UPS, imballaggi rinforzati e sempre con assicurazione inclusa. Al m
                 </div>
               </div>
             )}
-          </div>
         </div>
       ) : (
         /* Contenuto della guida */
