@@ -1,4 +1,3 @@
-// app/page.tsx
 "use client"
 
 import { useState, useEffect, useRef } from "react"
@@ -10,7 +9,13 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { Phone, Users, Clock, CheckCircle, AlertCircle, BookOpen, ArrowLeft, ArrowUpDown } from "lucide-react"
+import { 
+  Dialog, 
+  DialogContent, 
+  DialogHeader, 
+  DialogTitle 
+} from "@/components/ui/dialog"
+import { Phone, Users, Clock, CheckCircle, AlertCircle, BookOpen, ArrowUpDown } from "lucide-react"
 
 // Importo il componente per la paginazione
 const Pagination = ({ currentPage, totalPages, pageSize, totalItems, onPageChange, onPageSizeChange }) => {
@@ -201,11 +206,12 @@ export default function CRMPage() {
   // Stati per i contatti e UI
   const [contacts, setContacts] = useState<Contact[]>([])
   const [loading, setLoading] = useState(true)
-  const [showGuide, setShowGuide] = useState(false)
   const [activeTab, setActiveTab] = useState<"script" | "guida">("script")
-  const [savedScrollPosition, setSavedScrollPosition] = useState(0)
   const [sortBy, setSortBy] = useState<string>("updateStatus")
   const crmContainerRef = useRef<HTMLDivElement>(null)
+  
+  // Stato per la modale degli script
+  const [isGuideOpen, setIsGuideOpen] = useState(false)
 
   // Stati per filtri
   const [filters, setFilters] = useState<FilterState>({
@@ -353,28 +359,9 @@ export default function CRMPage() {
     setCurrentPage(1) // Reset alla prima pagina quando cambia l'ordinamento
   }
 
-  // Handler per mostrare/nascondere la guida
-  const handleShowGuide = () => {
-    if (!showGuide) {
-      // Salva la posizione di scroll prima di mostrare la guida
-      if (crmContainerRef.current) {
-        setSavedScrollPosition(crmContainerRef.current.scrollTop)
-      }
-    }
-    setShowGuide(!showGuide)
-  }
-
-  // Handler per tornare dal pannello guida
-  const handleHideGuide = () => {
-    setShowGuide(false)
-    // Ripristina la posizione di scroll quando si chiude la guida
-    if (crmContainerRef.current) {
-      setTimeout(() => {
-        if (crmContainerRef.current) {
-          crmContainerRef.current.scrollTo({ top: savedScrollPosition })
-        }
-      }, 100) // Piccolo ritardo per assicurarsi che il DOM sia aggiornato
-    }
+  // Handler per mostrare la modale della guida
+  const handleOpenGuide = () => {
+    setIsGuideOpen(true)
   }
 
   // Inizializza il database con i dati CSV
@@ -589,111 +576,99 @@ Proporre una collaborazione commerciale per la vendita di orologi da parete in s
         </Card>
       </div>
 
-      {/* Bottone fisso per accedere alla guida */}
+      {/* Bottone fisso per accedere alla modale della guida */}
       <div className="fixed bottom-4 right-4 z-50 shadow-lg rounded-lg overflow-hidden">
         <Button 
-          onClick={handleShowGuide} 
-          variant={showGuide ? "default" : "secondary"}
+          onClick={handleOpenGuide} 
+          variant="secondary"
           size="lg"
           className="flex items-center gap-2"
         >
-          {!showGuide ? (
-            <>
-              <BookOpen className="h-5 w-5" />
-              <span className="hidden sm:inline">Consulta Script e Guide</span>
-              <span className="inline sm:hidden">Guide</span>
-            </>
-          ) : (
-            <>
-              <ArrowLeft className="h-5 w-5" />
-              <span className="hidden sm:inline">Torna al CRM</span>
-              <span className="inline sm:hidden">Torna</span>
-            </>
-          )}
+          <BookOpen className="h-5 w-5" />
+          <span className="hidden sm:inline">Consulta Script e Guide</span>
+          <span className="inline sm:hidden">Guide</span>
         </Button>
       </div>
 
-      {/* Contenuto principale */}
-      {!showGuide ? (
-        <div className="flex flex-col">
-          {/* Filtri e Ordinamento */}
-          <div className="flex flex-col lg:flex-row justify-between gap-4 mb-6">
-            <Filters filters={filters} onFiltersChange={handleFiltersChange} contactCounts={contactCounts} />
-            <SortOptions sortBy={sortBy} onSortChange={handleSortChange} />
-          </div>
-
-          {/* Lista Contatti */}
-          <div ref={crmContainerRef}>
-            {loading ? (
-              <div className="flex justify-center items-center p-12">
-                <div className="text-center">
-                  <ArrowUpDown className="h-8 w-8 animate-spin mx-auto text-primary mb-4" />
-                  <p className="text-muted-foreground">Caricamento contatti...</p>
-                </div>
-              </div>
-            ) : contacts.length > 0 ? (
-              <>
-                <div className="space-y-4">
-                  {contacts.map((contact) => (
-                    <ContactCard key={contact.id} contact={contact} onUpdate={handleContactUpdate} />
-                  ))}
-                </div>
-
-                {/* Componente Paginazione */}
-                <Pagination
-                  currentPage={currentPage}
-                  totalPages={totalPages}
-                  pageSize={pageSize}
-                  totalItems={totalItems}
-                  onPageChange={handlePageChange}
-                  onPageSizeChange={handlePageSizeChange}
-                />
-              </>
-            ) : (
-              <div className="flex justify-center items-center p-12 border rounded-lg">
-                <div className="text-center">
-                  <AlertCircle className="h-8 w-8 mx-auto text-amber-500 mb-4" />
-                  <p className="font-medium mb-1">Nessun contatto trovato</p>
-                  <p className="text-sm text-muted-foreground">
-                    {contactCounts.total === 0
-                      ? "Il database è vuoto. Utilizza il pulsante 'Inizializza Database' in alto."
-                      : "Prova a modificare i filtri per visualizzare altri contatti."}
-                  </p>
-                </div>
-              </div>
-            )}
-          </div>
+      {/* Contenuto principale - sempre visibile */}
+      <div className="flex flex-col">
+        {/* Filtri e Ordinamento */}
+        <div className="flex flex-col lg:flex-row justify-between gap-4 mb-6">
+          <Filters filters={filters} onFiltersChange={handleFiltersChange} contactCounts={contactCounts} />
+          <SortOptions sortBy={sortBy} onSortChange={handleSortChange} />
         </div>
-      ) : (
-        /* Contenuto della guida */
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-xl">Guide e Script di Chiamata</CardTitle>
-          </CardHeader>
-          <CardContent>
+
+        {/* Lista Contatti */}
+        <div ref={crmContainerRef}>
+          {loading ? (
+            <div className="flex justify-center items-center p-12">
+              <div className="text-center">
+                <ArrowUpDown className="h-8 w-8 animate-spin mx-auto text-primary mb-4" />
+                <p className="text-muted-foreground">Caricamento contatti...</p>
+              </div>
+            </div>
+          ) : contacts.length > 0 ? (
+            <>
+              <div className="space-y-4">
+                {contacts.map((contact) => (
+                  <ContactCard key={contact.id} contact={contact} onUpdate={handleContactUpdate} />
+                ))}
+              </div>
+
+              {/* Componente Paginazione */}
+              <Pagination
+                currentPage={currentPage}
+                totalPages={totalPages}
+                pageSize={pageSize}
+                totalItems={totalItems}
+                onPageChange={handlePageChange}
+                onPageSizeChange={handlePageSizeChange}
+              />
+            </>
+          ) : (
+            <div className="flex justify-center items-center p-12 border rounded-lg">
+              <div className="text-center">
+                <AlertCircle className="h-8 w-8 mx-auto text-amber-500 mb-4" />
+                <p className="font-medium mb-1">Nessun contatto trovato</p>
+                <p className="text-sm text-muted-foreground">
+                  {contactCounts.total === 0
+                    ? "Il database è vuoto. Utilizza il pulsante 'Inizializza Database' in alto."
+                    : "Prova a modificare i filtri per visualizzare altri contatti."}
+                </p>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Modale per Script e Guida */}
+      <Dialog open={isGuideOpen} onOpenChange={setIsGuideOpen}>
+        <DialogContent className="max-w-4xl h-[80vh] flex flex-col">
+          <DialogHeader>
+            <DialogTitle className="text-xl">Guide e Script di Chiamata</DialogTitle>
+          </DialogHeader>
+          <div className="flex-1 overflow-hidden">
             <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as "script" | "guida")}>
               <TabsList className="mb-4">
                 <TabsTrigger value="script">Script di Chiamata</TabsTrigger>
                 <TabsTrigger value="guida">Guida e FAQ</TabsTrigger>
               </TabsList>
-              <TabsContent value="script" className="mt-4">
-                <ScrollArea className="h-[calc(100vh-320px)] pr-4">
+              <TabsContent value="script" className="mt-4 h-[calc(80vh-150px)]">
+                <ScrollArea className="h-full pr-4">
                   <div className="whitespace-pre-line font-medium">{TESTO_SCRIPT}</div>
                 </ScrollArea>
               </TabsContent>
-              <TabsContent value="guida" className="mt-4">
-                <ScrollArea className="h-[calc(100vh-320px)] pr-4">
+              <TabsContent value="guida" className="mt-4 h-[calc(80vh-150px)]">
+                <ScrollArea className="h-full pr-4">
                   <div className="prose max-w-none">
                     <div className="whitespace-pre-line">{TESTO_GUIDA}</div>
                   </div>
                 </ScrollArea>
               </TabsContent>
             </Tabs>
-          </CardContent>
-        </Card>
-      )}
-
-   
+          </div>
+        </DialogContent>
+      </Dialog>
     </main>
   )
 }
