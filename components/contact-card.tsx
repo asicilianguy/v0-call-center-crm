@@ -204,6 +204,19 @@ export function ContactCard({ contact, onUpdate }: ContactCardProps) {
             className="min-h-[80px]"
           />
         </div>
+        {/* Aggiungi questo alla fine della CardContent, prima della sua chiusura */}
+{contact.updatedAt && (
+  <div className="mt-2 text-xs text-muted-foreground flex items-center justify-end">
+    <Clock className="h-3 w-3 mr-1" />
+    Ultimo aggiornamento: {new Date(contact.updatedAt).toLocaleString('it-IT', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    })}
+  </div>
+)}
 
         {/* Info callback se programmata */}
         {contact.callbackAt && (
