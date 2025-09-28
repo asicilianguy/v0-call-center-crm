@@ -5,9 +5,11 @@ import type { Contact, FilterState } from "@/lib/types"
 import { loadContacts, saveContacts, updateContact, loadContactsFromCSV } from "@/lib/storage"
 import { ContactCard } from "@/components/contact-card"
 import { Filters } from "@/components/filters"
+import { MigrateButton } from "@/components/migrate-button" 
+import { SortOptions } from "@/components/sort-options"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Phone, Users, Clock, CheckCircle, AlertCircle, BookOpen, ArrowLeft } from "lucide-react"
+import { Phone, Users, Clock, CheckCircle, AlertCircle, BookOpen, ArrowLeft, ArrowsUpDown } from "lucide-react"
 
 export default function CRMPage() {
   const [contacts, setContacts] = useState<Contact[]>([])
@@ -16,6 +18,7 @@ export default function CRMPage() {
   const [showGuide, setShowGuide] = useState(false)
   const [activeTab, setActiveTab] = useState<"script" | "guida">("script")
   const [savedScrollPosition, setSavedScrollPosition] = useState(0)
+  const [sortBy, setSortBy] = useState<string>("updateStatus")
   const crmContainerRef = useRef<HTMLDivElement>(null)
   const [filters, setFilters] = useState<FilterState>({
     phone_status: "tutti",
@@ -27,23 +30,29 @@ export default function CRMPage() {
     async function initializeContacts() {
       setLoading(true)
 
-      let storedContacts = loadContacts()
+      try {
+        // Carica i contatti con l'ordinamento attuale
+        let storedContacts = await loadContacts(sortBy)
 
-      if (storedContacts.length === 0) {
-        console.log("Caricamento contatti dal CSV...")
-        storedContacts = await loadContactsFromCSV()
-        if (storedContacts.length > 0) {
-          saveContacts(storedContacts)
-          console.log(`Caricati ${storedContacts.length} contatti dal CSV`)
+        if (storedContacts.length === 0) {
+          console.log("Caricamento contatti dal CSV...")
+          storedContacts = await loadContactsFromCSV()
+          if (storedContacts.length > 0) {
+            await saveContacts(storedContacts)
+            console.log(`Caricati ${storedContacts.length} contatti dal CSV`)
+          }
         }
-      }
 
-      setContacts(storedContacts)
-      setLoading(false)
+        setContacts(storedContacts)
+      } catch (error) {
+        console.error("Errore nell'inizializzazione dei contatti:", error)
+      } finally {
+        setLoading(false)
+      }
     }
 
     initializeContacts()
-  }, [])
+  }, [sortBy])
 
   useEffect(() => {
     let filtered = contacts
@@ -63,19 +72,28 @@ export default function CRMPage() {
     setFilteredContacts(filtered)
   }, [contacts, filters])
 
-  const handleContactUpdate = (contactId: string, updates: Partial<Contact>) => {
-    const updatedContacts = updateContact(contactId, updates)
-    setContacts(updatedContacts)
+  const handleContactUpdate = async (contactId: string, updates: Partial<Contact>) => {
+    try {
+      const updatedContacts = await updateContact(contactId, updates)
+      setContacts(updatedContacts)
+    } catch (error) {
+      console.error("Errore nell'aggiornamento del contatto:", error)
+    }
   }
 
   const handleReloadData = async () => {
     setLoading(true)
-    const freshContacts = await loadContactsFromCSV()
-    if (freshContacts.length > 0) {
-      saveContacts(freshContacts)
-      setContacts(freshContacts)
+    try {
+      const freshContacts = await loadContactsFromCSV()
+      if (freshContacts.length > 0) {
+        await saveContacts(freshContacts)
+        setContacts(freshContacts)
+      }
+    } catch (error) {
+      console.error("Errore nel ricaricare i dati:", error)
+    } finally {
+      setLoading(false)
     }
-    setLoading(false)
   }
 
   const handleOpenGuide = () => {
@@ -90,6 +108,10 @@ export default function CRMPage() {
     setTimeout(() => {
       window.scrollTo(0, savedScrollPosition)
     }, 0)
+  }
+
+  const handleSortChange = (newSortBy: string) => {
+    setSortBy(newSortBy);
   }
 
   const scriptContent = `Tu: 
@@ -140,20 +162,20 @@ Domanda: Esiste la possibilità di fare il reso?
 Risposta: il reso é possibile in caso di evidenti difetti o nel caso in cui arrivi rotto ,per tutti gli altri motivi non è possibile richiedere il reso dato che un prodotto personalizzato e quindi realizzato su misura." 
 
 Gestione delle Obiezioni Comuni 
-• "Non ho tempo per gestire un altro fornitore." 
+- "Non ho tempo per gestire un altro fornitore." 
 Risposta: "Capisco; proprio per questo il nostro processo è semplice e veloce, senza necessità di magazzino o contratti complessi." 
-• "Non conosciamo ancora il vostro brand." 
+- "Non conosciamo ancora il vostro brand." 
 Risposta: "Il nostro focus è costruire relazioni durature: con una chiamata iniziale può familiarizzare con la qualità e la professionalità che offriamo." 
-• "Temo costi nascosti." 
+- "Temo costi nascosti." 
 Risposta: "L'unico costo è il prezzo di listino, da cui vi verrà scontato il 20%. Non ci sono spese aggiuntive né di attivazione." 
 
 Chiusura e Prossimi Passi 
 1. Richiesta di Impegno: 
-• "Le mando un link con accesso alla piattaforma dove può esplorare il tutto e una guida semplice sulle funzionalità del sito, così se ne fa un'idea diretta. Poi ci risentiamo tra qualche giorno nel caso in cui abbia ulteriori dubbi, va bene per Lei?" 
+- "Le mando un link con accesso alla piattaforma dove può esplorare il tutto e una guida semplice sulle funzionalità del sito, così se ne fa un'idea diretta. Poi ci risentiamo tra qualche giorno nel caso in cui abbia ulteriori dubbi, va bene per Lei?" 
 2. Conferma e formazione: 
-• inviare il manuale d'uso del sito e il link del sito. 
+- inviare il manuale d'uso del sito e il link del sito. 
 3. Ringraziamenti: 
-• "La ringrazio per il suo tempo. Rimango a disposizione per qualsiasi domanda. Buona giornata!"`
+- "La ringrazio per il suo tempo. Rimango a disposizione per qualsiasi domanda. Buona giornata!"`
 
   const guidaContent = `GUIDA COMPLETA OPERATORE CALL CENTER
 
@@ -364,13 +386,21 @@ Proporre una collaborazione commerciale per la vendita di orologi da parete in s
           }}
         />
 
-        <div className="flex justify-between items-center mb-6">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
           <div className="text-sm text-muted-foreground">
             Visualizzando {filteredContacts.length} di {contacts.length} contatti
           </div>
-          <Button onClick={handleReloadData} variant="outline">
-            Ricarica Dati
-          </Button>
+          
+          <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
+            <SortOptions sortBy={sortBy} onSortChange={handleSortChange} />
+            
+            <div className="flex gap-2 w-full sm:w-auto">
+              <MigrateButton />
+              <Button onClick={handleReloadData} variant="outline">
+                Ricarica Dati
+              </Button>
+            </div>
+          </div>
         </div>
 
         {filteredContacts.length === 0 ? (
