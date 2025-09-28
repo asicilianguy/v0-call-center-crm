@@ -1,3 +1,4 @@
+// app/api/contacts/route.ts
 import { NextResponse } from 'next/server';
 import clientPromise from '@/lib/mongodb';
 import type { Contact } from '@/lib/types';
@@ -5,18 +6,49 @@ import type { Contact } from '@/lib/types';
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
+    
+    // Parametri di paginazione
+    const page = parseInt(searchParams.get('page') || '1');
+    const pageSize = parseInt(searchParams.get('pageSize') || '20');
     const sortBy = searchParams.get('sortBy') || 'updateStatus';
+    
+    // Calcola lo skip per la paginazione
+    const skip = (page - 1) * pageSize;
+    
+    // Costruisci i filtri
+    const filters: Record<string, any> = {};
+    
+    // Aggiungi i filtri dai parametri della query
+    if (searchParams.get('phone_status') && searchParams.get('phone_status') !== 'tutti') {
+      filters.phone_status = searchParams.get('phone_status');
+    }
+    
+    if (searchParams.get('interesse') && searchParams.get('interesse') !== 'tutti') {
+      filters.interesse = searchParams.get('interesse');
+    }
+    
+    if (searchParams.get('reindirizzato') && searchParams.get('reindirizzato') !== 'tutti') {
+      filters.reindirizzato = searchParams.get('reindirizzato');
+    }
     
     const client = await clientPromise;
     const db = client.db("consignment");
-    const contacts = await db.collection("contacts").find({}).toArray();
     
-    // Ordinamento lato server
+    // Ottieni il conteggio totale per la paginazione
+    const totalCount = await db.collection("contacts").countDocuments(filters);
+    
+    // Ottieni i contatti paginati
+    const contacts = await db.collection("contacts")
+      .find(filters)
+      .skip(skip)
+      .limit(pageSize)
+      .toArray();
+    
+    // Applica l'ordinamento in memoria (si potrebbe ottimizzare usando l'ordinamento di MongoDB)
     let sortedContacts = [...contacts];
     
     switch (sortBy) {
       case "updateStatus":
-        // Se updateAt != createdAt, ordina per updatedAt (più recenti prima)
         sortedContacts.sort((a, b) => {
           const aUpdated = a.updatedAt !== a.createdAt;
           const bUpdated = b.updatedAt !== b.createdAt;
@@ -50,10 +82,14 @@ export async function GET(request: Request) {
         break;
     }
     
-    return NextResponse.json(sortedContacts);
+    // Restituisci sia i contatti paginati che il conteggio totale
+    return NextResponse.json({
+      contacts: sortedContacts,
+      totalCount: totalCount
+    });
   } catch (error) {
     console.error("Failed to fetch contacts:", error);
-    return NextResponse.json({ error: "Failed to fetch contacts" }, { status: 500 });
+    return NextResponse.json({ error: "Failed to fetch contacts", details: String(error) }, { status: 500 });
   }
 }
 
@@ -75,7 +111,7 @@ export async function POST(request: Request) {
     }
   } catch (error) {
     console.error("Failed to insert contacts:", error);
-    return NextResponse.json({ error: "Failed to insert contacts" }, { status: 500 });
+    return NextResponse.json({ error: "Failed to insert contacts", details: String(error) }, { status: 500 });
   }
 }
 
@@ -99,6 +135,6 @@ export async function PUT(request: Request) {
     return NextResponse.json({ updated: result.modifiedCount });
   } catch (error) {
     console.error("Failed to update contact:", error);
-    return NextResponse.json({ error: "Failed to update contact" }, { status: 500 });
+    return NextResponse.json({ error: "Failed to update contact", details: String(error) }, { status: 500 });
   }
 }

@@ -3,7 +3,6 @@
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Database, AlertCircle, CheckCircle, Loader2, Trash } from "lucide-react"
-import { migrateContactsToMongoDB } from "@/lib/storage"
 import {
   Dialog,
   DialogContent,
@@ -22,15 +21,7 @@ export function MigrateButton() {
     setIsMigrating(true)
     setResult(null)
     
-    try {
-      const migrationResult = await migrateContactsToMongoDB()
-      setResult(migrationResult)
-    } catch (error) {
-      console.error("Errore durante la migrazione:", error)
-      setResult({ success: false, migrated: 0, cleared: false })
-    } finally {
-      setIsMigrating(false)
-    }
+   
   }
   
   return (

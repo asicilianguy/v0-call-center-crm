@@ -1,30 +1,26 @@
-import type { Contact } from "./types"
+// lib/storage.ts
+import type { Contact } from '@/lib/types';
 
-const STORAGE_KEY = "crm_telefonico_contacts"
+const STORAGE_KEY = 'crm_contacts';
 
-// Funzione utility per ordinare i contatti
-export function sortContacts(contacts: Contact[], sortBy: string = "updateStatus"): Contact[] {
+// Funzione per ordinare i contatti
+function sortContacts(contacts: Contact[], sortBy: string = "updateStatus"): Contact[] {
+  // Clona l'array per non modificare quello originale
   const sortedContacts = [...contacts];
   
   switch (sortBy) {
     case "updateStatus":
       // Se updateAt != createdAt, ordina per updatedAt (più recenti prima)
-      // Altrimenti mantiene l'ordine originale
       return sortedContacts.sort((a, b) => {
         const aUpdated = a.updatedAt !== a.createdAt;
         const bUpdated = b.updatedAt !== b.createdAt;
         
-        // Se entrambi sono stati aggiornati o entrambi non sono stati aggiornati
         if (aUpdated === bUpdated) {
-          // Per quelli aggiornati, mostra i più recenti prima
           if (aUpdated) {
             return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();
           }
-          // Altrimenti, mantieni l'ordine originale (basato sull'ID)
           return a.id.localeCompare(b.id);
         }
-        
-        // Mostra prima quelli aggiornati
         return aUpdated ? -1 : 1;
       });
     
@@ -53,36 +49,36 @@ export function sortContacts(contacts: Contact[], sortBy: string = "updateStatus
 
 export async function loadContactsFromCSV(): Promise<Contact[]> {
   const csvUrl =
-    "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/aziende_con_telefono-iuKXtxvRgCD2MFzShnsS9iJ0sramFS.csv"
+    "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/aziende_con_telefono-iuKXtxvRgCD2MFzShnsS9iJ0sramFS.csv";
 
   try {
-    const response = await fetch(csvUrl)
-    const csvText = await response.text()
+    const response = await fetch(csvUrl);
+    const csvText = await response.text();
 
-    const lines = csvText.split("\n")
-    const contacts: Contact[] = []
+    const lines = csvText.split("\n");
+    const contacts: Contact[] = [];
 
     for (let i = 1; i < lines.length; i++) {
-      const line = lines[i].trim()
-      if (!line) continue
+      const line = lines[i].trim();
+      if (!line) continue;
 
       // Parse CSV con gestione delle virgole nei campi
-      const values = []
-      let current = ""
-      let inQuotes = false
+      const values = [];
+      let current = "";
+      let inQuotes = false;
 
       for (let j = 0; j < line.length; j++) {
-        const char = line[j]
+        const char = line[j];
         if (char === '"') {
-          inQuotes = !inQuotes
+          inQuotes = !inQuotes;
         } else if (char === "," && !inQuotes) {
-          values.push(current.trim().replace(/"/g, ""))
-          current = ""
+          values.push(current.trim().replace(/"/g, ""));
+          current = "";
         } else {
-          current += char
+          current += char;
         }
       }
-      values.push(current.trim().replace(/"/g, ""))
+      values.push(current.trim().replace(/"/g, ""));
 
       if (values.length >= 2 && values[0] && values[1]) {
         const contact: Contact = {
@@ -98,40 +94,46 @@ export async function loadContactsFromCSV(): Promise<Contact[]> {
           callbackAt: null,
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
-        }
-        contacts.push(contact)
+        };
+        contacts.push(contact);
       }
     }
 
-    return contacts
+    return contacts;
   } catch (error) {
-    console.error("Errore nel caricamento del CSV:", error)
-    return []
+    console.error("Errore nel caricamento del CSV:", error);
+    return [];
   }
 }
 
-// Funzione per caricare i contatti dal database con supporto per l'ordinamento
-export async function loadContacts(sortBy: string = "updateStatus"): Promise<Contact[]> {
+// Funzione per caricare i contatti dal database con supporto per la paginazione
+export async function loadContacts(
+  page: number = 1, 
+  pageSize: number = 20, 
+  sortBy: string = "updateStatus", 
+  filters: Record<string, string> = {}
+): Promise<{ contacts: Contact[]; totalCount: number }> {
   try {
-    // Prova a caricare dal database
-    const response = await fetch(`/api/contacts?sortBy=${encodeURIComponent(sortBy)}`)
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`)
-    }
-    const data = await response.json()
-    return data
-  } catch (error) {
-    console.error("Errore nel caricamento dei contatti dal database:", error)
+    // Costruisci l'URL con i parametri di paginazione e ordinamento
+    let url = `/api/contacts?page=${page}&pageSize=${pageSize}&sortBy=${encodeURIComponent(sortBy)}`;
     
-    // Fallback a localStorage in caso di errore
-    if (typeof window !== "undefined") {
-      const stored = localStorage.getItem(STORAGE_KEY)
-      if (stored) {
-        const contacts = JSON.parse(stored);
-        return sortContacts(contacts, sortBy);
+    // Aggiungi filtri all'URL se presenti
+    Object.entries(filters).forEach(([key, value]) => {
+      if (value && value !== 'tutti') {
+        url += `&${key}=${encodeURIComponent(value)}`;
       }
+    });
+    
+    const response = await fetch(url);
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
     }
-    return []
+    
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error("Errore nel caricamento dei contatti dal database:", error);
+    return { contacts: [], totalCount: 0 };
   }
 }
 
@@ -144,26 +146,16 @@ export async function saveContacts(contacts: Contact[]): Promise<Contact[]> {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(contacts),
-    })
+    });
     
     if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`)
+      throw new Error(`HTTP error! status: ${response.status}`);
     }
     
-    // Salva anche in localStorage come fallback
-    if (typeof window !== "undefined") {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(contacts))
-    }
-    
-    return contacts
+    return contacts;
   } catch (error) {
-    console.error("Errore nel salvare i contatti nel database:", error)
-    
-    // Salva solo in localStorage in caso di errore
-    if (typeof window !== "undefined") {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(contacts))
-    }
-    return contacts
+    console.error("Errore nel salvare i contatti nel database:", error);
+    return [];
   }
 }
 
@@ -179,98 +171,48 @@ export async function updateContact(contactId: string, updates: Partial<Contact>
         id: contactId,
         ...updates,
       }),
-    })
+    });
     
     if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`)
+      throw new Error(`HTTP error! status: ${response.status}`);
     }
     
-    // Aggiorna la cache locale
-    const contacts = await loadContacts()
-    const index = contacts.findIndex((c) => c.id === contactId)
-    
-    if (index !== -1) {
-      contacts[index] = {
-        ...contacts[index],
-        ...updates,
-        updatedAt: new Date().toISOString(),
-      }
-      
-      // Aggiorna anche in localStorage come fallback
-      if (typeof window !== "undefined") {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(contacts))
-      }
-    }
-    
-    return contacts
+    // Ricarica i contatti dopo l'aggiornamento
+    const { contacts } = await loadContacts();
+    return contacts;
   } catch (error) {
-    console.error("Errore nell'aggiornamento del contatto nel database:", error)
-    
-    // Fallback a localStorage in caso di errore
-    const contacts = loadLocalContacts()
-    const index = contacts.findIndex((c) => c.id === contactId)
-    
-    if (index !== -1) {
-      contacts[index] = {
-        ...contacts[index],
-        ...updates,
-        updatedAt: new Date().toISOString(),
-      }
-      
-      if (typeof window !== "undefined") {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(contacts))
-      }
-    }
-    
-    return contacts
+    console.error("Errore nell'aggiornamento del contatto nel database:", error);
+    return [];
   }
 }
 
-// Funzione per migrare i contatti da localStorage a MongoDB
-export async function migrateContactsToMongoDB(): Promise<{ success: boolean; migrated: number; cleared: boolean }> {
+// Funzione per inizializzare il database con i dati del CSV
+export async function initializeDatabase(): Promise<{ success: boolean; count: number }> {
   try {
-    // Leggi i contatti dal localStorage
-    const contacts = loadLocalContacts()
+    // Carica i contatti dal CSV
+    const contacts = await loadContactsFromCSV();
     
     if (contacts.length === 0) {
-      return { success: false, migrated: 0, cleared: false }
+      return { success: false, count: 0 };
     }
     
-    // Invia i contatti all'API di migrazione
-    const response = await fetch('/api/contacts/migrate', {
+    // Invia i contatti all'API per il salvataggio
+    const response = await fetch('/api/contacts/initialize', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({ contacts }),
-    })
+    });
     
     if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`)
+      throw new Error(`HTTP error! status: ${response.status}`);
     }
     
-    const result = await response.json()
-    
-    // Se la migrazione è andata a buon fine, pulisci il localStorage
-    if (result.success && typeof window !== "undefined") {
-      localStorage.removeItem(STORAGE_KEY)
-      return { success: true, migrated: result.migrated, cleared: true }
-    }
-    
-    return { success: result.success, migrated: result.migrated, cleared: false }
+    const result = await response.json();
+    return { success: true, count: result.inserted || 0 };
   } catch (error) {
-    console.error("Errore nella migrazione dei contatti:", error)
-    return { success: false, migrated: 0, cleared: false }
+    console.error("Errore nell'inizializzazione del database:", error);
+    return { success: false, count: 0 };
   }
-}
-
-// Funzione helper per caricare i contatti direttamente da localStorage
-function loadLocalContacts(): Contact[] {
-  if (typeof window === "undefined") return []
-  
-  const stored = localStorage.getItem(STORAGE_KEY)
-  if (stored) {
-    return JSON.parse(stored)
-  }
-  return []
 }
