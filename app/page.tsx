@@ -369,7 +369,11 @@ export default function CRMPage() {
     setShowGuide(false)
     // Ripristina la posizione di scroll quando si chiude la guida
     if (crmContainerRef.current) {
-      crmContainerRef.current.scrollTo({ top: savedScrollPosition })
+      setTimeout(() => {
+        if (crmContainerRef.current) {
+          crmContainerRef.current.scrollTo({ top: savedScrollPosition })
+        }
+      }, 100) // Piccolo ritardo per assicurarsi che il DOM sia aggiornato
     }
   }
 
@@ -404,86 +408,145 @@ export default function CRMPage() {
   }
 
   // Contenuto dello script di chiamata
-  const TESTO_SCRIPT = `👉 Tu:
-"Buongiorno [nome negozio], sono Francesca, con chi ho il piacere di parlare? è il/la titolare del negozio?
-(pausa, ascolta la risposta)
+  const TESTO_SCRIPT =`Tu: 
+"Buongiorno [nome negozio], sono Francesca, con chi ho il piacere di parlare? è il/la titolare del negozio? 
+(pausa, ascolta la risposta) 
 
-👉 Tu:
-"Perfetto, la disturbo solo un minuto… ci tengo a dirle che non sono un call center, ma la contatto per proporle una collaborazione pensata proprio per valorizzare la sua attività."
+Tu: 
+"Perfetto, la disturbo solo un minuto... ci tengo a dirle che non sono un call center, ma la contatto per proporle una collaborazione pensata proprio per valorizzare la sua attività." 
 
-👉 Tu:
-"Nasciamo come vetreria, in attività da oltre vent'anni, ad oggi siamo anche un brand emergente di artigianato italiano che realizza orologi da parete in specchio, interamente su misura.
-Non si tratta di semplici orologi, ma di pezzi unici, autentici complementi d'arredo, che possono essere personalizzati dal nostro sito con anteprime realistiche in ogni fase della creazione."
+Tu: 
+"Nasciamo come vetreria, in attività da oltre vent'anni, ad oggi siamo anche un brand emergente di artigianato italiano che realizza orologi da parete in specchio, interamente su misura. 
+Non si tratta di semplici orologi, ma di pezzi unici, autentici complementi d'arredo, che possono essere personalizzati dal nostro sito con anteprime realistiche in ogni fase della creazione." 
 
-👉 Tu:
-"Per lei non ci sono acquisti di magazzino né burocrazie: ogni orologio viene realizzato solo su ordinazione.
-In questo modo può distinguersi, offrendo ai suoi clienti un prodotto esclusivo, innovativo e che non troveranno altrove."
+Tu: 
+"Per lei non ci sono acquisti di magazzino né burocrazie: ogni orologio viene realizzato solo su ordinazione. 
+In questo modo può distinguersi, offrendo ai suoi clienti un prodotto esclusivo, innovativo e che non troveranno altrove." 
 
-👉 Tu:
-"tramite questa collaborazione potrà usufruire del 20% di sconto base su ogni orologio, che diventerà il suo guadagno diretto. Oltre a un guadagno dovuto all'offerta di servizi aggiuntivi in negozio di cui i clienti nel nostro sito non potranno usufruire (consulenza sul tipo di colore che si abbina di più con gli interni, oppure il montaggio), aumentando quindi il valore percepito potendo così aumentare ulteriormente il costo dell'orologio.
-E per i primi 100 orologi venduti riconosciamo anche un ulteriore 30% di sconto extra."`
+Tu: 
+"tramite questa collaborazione potrà usufruire del 20% di sconto base su ogni orologio, che diventerà il suo guadagno diretto. Oltre a un guadagno dovuto all'offerta di servizi aggiuntivi in negozio di cui i clienti nel nostro sito non potranno usufruire (consulenza sul tipo di colore che si abbina di più con gli interni , oppure il montaggio), aumentando quindi il valore percepito potendo così aumentare ulteriormente il costo dell'orologio. 
+E per i primi 100 orologi venduti riconosciamo anche un ulteriore 30% di sconto extra." 
+
+SITO: antoniorologi.it 
+
+DOMANDE POSSIBILI: 
+"Domanda: "Come fatturate gli ordini?" 
+Risposta: 
+
+"Ogni ordine viene fatturato regolarmente con partita IVA e codice fiscale aziendale. La fattura elettronica viene emessa al momento della spedizione e inviata anche via email per comodità. Non ci sono costi nascosti né spese aggiuntive." 
+
+Domanda: "In quanto tempo riceviamo l'orologio?" 
+Risposta: 
+
+"I tempi standard sono di 7–10 giorni lavorativi dalla conferma dell'ordine, perché ogni orologio viene realizzato e rifinito artigianalmente. Il nostro sistema permette di avere una stima calcolata dinamicamente in base al numero di ordini che abbiamo da fare garantendo così una stima dei tempi più realistica possibile. 
+
+Domanda: "Come spedite i prodotti?" 
+Risposta: 
+
+"Spediamo con UPS, imballaggi rinforzati e sempre con assicurazione inclusa. Al momento della spedizione riceverete il tracking per seguire la consegna in tempo reale.è importante controllare subito le condizioni del prodotto alla consegna e segnalarci eventuali danni entro 2 giorni lavorativi. In questo modo apriamo immediatamente la pratica di assicurazione con il corriere e procediamo con la sostituzione. 
+Il costo delle spedizioni è già compreso nella nostra offerta partner per l'italia. 
+
+Domanda: "Come possiamo pagare gli ordini?" 
+Risposta: 
+
+"I metodi di pagamento sono mostrati al momento dell'acquisto, si puó pagare tramite carta anche a rate con klarna. 
+
+Domanda: Esiste la possibilità di fare il reso? 
+
+Risposta: il reso é possibile in caso di evidenti difetti o nel caso in cui arrivi rotto ,per tutti gli altri motivi non è possibile richiedere il reso dato che un prodotto personalizzato e quindi realizzato su misura." 
+
+Gestione delle Obiezioni Comuni 
+• "Non ho tempo per gestire un altro fornitore." 
+Risposta: "Capisco; proprio per questo il nostro processo è semplice e veloce, senza necessità di magazzino o contratti complessi." 
+• "Non conosciamo ancora il vostro brand." 
+Risposta: "Il nostro focus è costruire relazioni durature: con una chiamata iniziale può familiarizzare con la qualità e la professionalità che offriamo." 
+• "Temo costi nascosti." 
+Risposta: "L'unico costo è il prezzo di listino, da cui vi verrà scontato il 20%. Non ci sono spese aggiuntive né di attivazione." 
+
+Chiusura e Prossimi Passi 
+1. Richiesta di Impegno: 
+• "Le mando un link con accesso alla piattaforma dove può esplorare il tutto e una guida semplice sulle funzionalità del sito, così se ne fa un'idea diretta. Poi ci risentiamo tra qualche giorno nel caso in cui abbia ulteriori dubbi, va bene per Lei?" 
+2. Conferma e formazione: 
+• inviare il manuale d'uso del sito e il link del sito. 
+3. Ringraziamenti: 
+• "La ringrazio per il suo tempo. Rimango a disposizione per qualsiasi domanda. Buona giornata!"`
 
   // Contenuto della guida
-  const TESTO_GUIDA = `# Informazioni principali
+  const TESTO_GUIDA =  `GUIDA COMPLETA OPERATORE CALL CENTER
+
+📞 PREPARAZIONE ALLA CHIAMATA
+- Verifica nome azienda e numero di telefono
+- Prepara il tono di voce professionale ma amichevole
+- Tieni a portata di mano tutte le informazioni sul prodotto
+
+🎯 OBIETTIVO DELLA CHIAMATA
+Proporre una collaborazione commerciale per la vendita di orologi da parete in specchio personalizzati, realizzati artigianalmente in Italia.
+
+💼 INFORMAZIONI AZIENDA
+- Vetreria attiva da oltre 20 anni
+- Brand emergente di artigianato italiano
+- Specializzati in orologi da parete in specchio su misura
 - Sito web: antoniorologi.it
-- Prodotti: orologi da parete in specchio personalizzati
-- Proposta: collaborazione con negozi per vendita dei prodotti
-- Vantaggi: prodotto esclusivo, nessun magazzino, guadagno diretto (20% sconto + servizi)
-- Promo: 30% di sconto extra per i primi 100 orologi venduti
 
-# Domande frequenti
-## "Come fatturate gli ordini?"
-Ogni ordine viene fatturato regolarmente con partita IVA e codice fiscale aziendale. La fattura elettronica viene emessa al momento della spedizione e inviata anche via email per comodità. Non ci sono costi nascosti né spese aggiuntive.
+🔥 PUNTI DI FORZA DEL PRODOTTO
+- Pezzi unici, non reperibili altrove
+- Personalizzazione completa con anteprime realistiche
+- Realizzazione solo su ordinazione (no magazzino)
+- Complementi d'arredo di alta qualità
 
-## "In quanto tempo riceviamo l'orologio?"
-I tempi standard sono di 7–10 giorni lavorativi dalla conferma dell'ordine, perché ogni orologio viene realizzato e rifinito artigianalmente. Il nostro sistema permette di avere una stima calcolata dinamicamente in base al numero di ordini che abbiamo da fare garantendo così una stima dei tempi più realistica possibile.
+💰 PROPOSTA COMMERCIALE
+- 20% di sconto base su ogni orologio (= guadagno diretto partner)
+- Servizi aggiuntivi in negozio per aumentare il valore
+- 30% di sconto extra sui primi 100 orologi venduti
+- Nessun costo di attivazione o spese nascoste
 
-## "Come spedite i prodotti?"
-Spediamo con UPS, imballaggi rinforzati e sempre con assicurazione inclusa. Al momento della spedizione riceverete il tracking per seguire la consegna in tempo reale. È importante controllare subito le condizioni del prodotto alla consegna e segnalarci eventuali danni entro 2 giorni lavorativi.`
+⚡ VANTAGGI PER IL PARTNER
+- Nessun acquisto di magazzino
+- Nessuna burocrazia complessa
+- Prodotto esclusivo per distinguersi
+- Guadagno immediato su ogni vendita
+- Possibilità di offrire servizi aggiuntivi (consulenza colori, montaggio)
+
+📋 PROCESSO OPERATIVO
+1. Partner riceve ordine dal cliente
+2. Ordine viene trasmesso a noi
+3. Realizziamo l'orologio in 7-10 giorni lavorativi
+4. Spediamo con UPS, imballaggio rinforzato e assicurazione
+5. Fatturazione regolare con P.IVA
+
+🛡️ GARANZIE E SICUREZZA
+- Fatturazione elettronica regolare
+- Spedizione assicurata inclusa nel prezzo
+- Tracking in tempo reale
+- Reso possibile solo per difetti o danni durante trasporto
+- Controllo qualità su ogni pezzo
+
+📞 GESTIONE OBIEZIONI COMUNI
+"Non ho tempo per un altro fornitore"
+→ "Il nostro processo è semplice e veloce, senza magazzino o contratti complessi"
+
+"Non conosciamo il vostro brand"
+→ "Il nostro focus è costruire relazioni durature, può familiarizzare con una chiamata iniziale"
+
+"Temo costi nascosti"
+→ "L'unico costo è il prezzo di listino meno il 20%. Nessuna spesa aggiuntiva"
+
+✅ CHIUSURA EFFICACE
+1. Inviare link piattaforma e guida funzionalità
+2. Programmare ricontatto tra qualche giorno
+3. Ringraziare per il tempo dedicato
+4. Rimanere disponibili per domande
+
+🎯 METRICHE DI SUCCESSO
+- Interesse mostrato durante la chiamata
+- Richiesta di maggiori informazioni
+- Accettazione invio materiali
+- Programmazione secondo contatto`
 
   return (
-    <main className="container mx-auto py-4 px-4">
+    <main className="container mx-auto py-4 px-4 relative">
       <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-6">
         <h1 className="text-2xl font-bold mb-2 lg:mb-0">CRM Gestione Chiamate</h1>
-        <div className="flex flex-col sm:flex-row gap-2">
-          <Button
-            onClick={handleInitializeDatabase}
-            variant="outline"
-            className="flex items-center gap-2 bg-amber-50 text-amber-800 border-amber-300 hover:bg-amber-100"
-            disabled={loading}
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="16"
-              height="16"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              className="lucide lucide-database"
-            >
-              <ellipse cx="12" cy="5" rx="9" ry="3" />
-              <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5" />
-              <path d="M3 12c0 1.66 4 3 9 3s9-1.34 9-3" />
-            </svg>
-            Inizializza Database
-          </Button>
-          <Button onClick={handleShowGuide} variant="secondary">
-            {!showGuide ? (
-              <>
-                <BookOpen className="mr-2 h-4 w-4" />
-                Consulta Script e Guide
-              </>
-            ) : (
-              <>
-                <ArrowLeft className="mr-2 h-4 w-4" />
-                Torna al CRM
-              </>
-            )}
-          </Button>
-        </div>
       </div>
 
       {/* Statistiche Chiamate */}
@@ -526,6 +589,30 @@ Spediamo con UPS, imballaggi rinforzati e sempre con assicurazione inclusa. Al m
         </Card>
       </div>
 
+      {/* Bottone fisso per accedere alla guida */}
+      <div className="fixed bottom-4 right-4 z-50 shadow-lg rounded-lg overflow-hidden">
+        <Button 
+          onClick={handleShowGuide} 
+          variant={showGuide ? "default" : "secondary"}
+          size="lg"
+          className="flex items-center gap-2"
+        >
+          {!showGuide ? (
+            <>
+              <BookOpen className="h-5 w-5" />
+              <span className="hidden sm:inline">Consulta Script e Guide</span>
+              <span className="inline sm:hidden">Guide</span>
+            </>
+          ) : (
+            <>
+              <ArrowLeft className="h-5 w-5" />
+              <span className="hidden sm:inline">Torna al CRM</span>
+              <span className="inline sm:hidden">Torna</span>
+            </>
+          )}
+        </Button>
+      </div>
+
       {/* Contenuto principale */}
       {!showGuide ? (
         <div className="flex flex-col">
@@ -536,6 +623,7 @@ Spediamo con UPS, imballaggi rinforzati e sempre con assicurazione inclusa. Al m
           </div>
 
           {/* Lista Contatti */}
+          <div className="overflow-y-auto max-h-[calc(100vh-380px)]" ref={crmContainerRef}>
             {loading ? (
               <div className="flex justify-center items-center p-12">
                 <div className="text-center">
@@ -574,20 +662,13 @@ Spediamo con UPS, imballaggi rinforzati e sempre con assicurazione inclusa. Al m
                 </div>
               </div>
             )}
+          </div>
         </div>
       ) : (
         /* Contenuto della guida */
         <Card>
           <CardHeader>
-            <CardTitle className="text-xl">
-              <div className="flex justify-between items-center">
-                <span>Guide e Script di Chiamata</span>
-                <Button variant="ghost" size="sm" onClick={handleHideGuide}>
-                  <ArrowLeft className="mr-2 h-4 w-4" />
-                  Torna al CRM
-                </Button>
-              </div>
-            </CardTitle>
+            <CardTitle className="text-xl">Guide e Script di Chiamata</CardTitle>
           </CardHeader>
           <CardContent>
             <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as "script" | "guida")}>
@@ -611,6 +692,8 @@ Spediamo con UPS, imballaggi rinforzati e sempre con assicurazione inclusa. Al m
           </CardContent>
         </Card>
       )}
+
+   
     </main>
   )
 }
