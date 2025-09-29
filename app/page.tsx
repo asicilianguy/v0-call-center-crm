@@ -9,13 +9,14 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { ScrollArea } from "@/components/ui/scroll-area"
+import { Input } from "@/components/ui/input"
 import { 
   Dialog, 
   DialogContent, 
   DialogHeader, 
   DialogTitle 
 } from "@/components/ui/dialog"
-import { Phone, Users, Clock, CheckCircle, AlertCircle, BookOpen, ArrowUpDown } from "lucide-react"
+import { Phone, Users, Clock, CheckCircle, AlertCircle, BookOpen, ArrowUpDown, Search } from "lucide-react"
 
 // Importo il componente per la paginazione
 const Pagination = ({ currentPage, totalPages, pageSize, totalItems, onPageChange, onPageSizeChange }) => {
@@ -212,6 +213,9 @@ export default function CRMPage() {
   
   // Stato per la modale degli script
   const [isGuideOpen, setIsGuideOpen] = useState(false)
+  
+  // Stato per la ricerca
+  const [searchQuery, setSearchQuery] = useState("")
 
   // Stati per filtri
   const [filters, setFilters] = useState<FilterState>({
@@ -245,6 +249,7 @@ export default function CRMPage() {
         if (filters.phone_status !== "tutti") filterParams.phone_status = filters.phone_status
         if (filters.interesse !== "tutti") filterParams.interesse = filters.interesse
         if (filters.reindirizzato !== "tutti") filterParams.reindirizzato = filters.reindirizzato
+        if (searchQuery.trim()) filterParams.search = searchQuery.trim()
 
         // Chiamata API per caricare i contatti paginati e filtrati
         const response = await fetch(
@@ -276,7 +281,7 @@ export default function CRMPage() {
     fetchContacts()
     // Carica anche le statistiche
     fetchContactStats()
-  }, [currentPage, pageSize, sortBy, filters])
+  }, [currentPage, pageSize, sortBy, filters, searchQuery])
 
   // Funzione per caricare le statistiche
   const fetchContactStats = async () => {
@@ -357,6 +362,12 @@ export default function CRMPage() {
   const handleSortChange = (value: string) => {
     setSortBy(value)
     setCurrentPage(1) // Reset alla prima pagina quando cambia l'ordinamento
+  }
+  
+  // Handler per il cambio della stringa di ricerca
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchQuery(e.target.value)
+    setCurrentPage(1) // Reset alla prima pagina quando cambia la ricerca
   }
 
   // Handler per mostrare la modale della guida
@@ -592,6 +603,20 @@ Proporre una collaborazione commerciale per la vendita di orologi da parete in s
 
       {/* Contenuto principale - sempre visibile */}
       <div className="flex flex-col">
+        {/* Barra di ricerca */}
+        <div className="mb-4">
+          <div className="relative">
+            <Search className="absolute left-2.5 top-2.5 h-5 w-5 text-muted-foreground" />
+            <Input
+              type="text"
+              placeholder="Cerca per azienda, telefono, indirizzo o sito web..."
+              value={searchQuery}
+              onChange={handleSearchChange}
+              className="pl-9 w-full"
+            />
+          </div>
+        </div>
+        
         {/* Filtri e Ordinamento */}
         <div className="flex flex-col lg:flex-row justify-between gap-4 mb-6">
           <Filters filters={filters} onFiltersChange={handleFiltersChange} contactCounts={contactCounts} />
@@ -633,7 +658,7 @@ Proporre una collaborazione commerciale per la vendita di orologi da parete in s
                 <p className="text-sm text-muted-foreground">
                   {contactCounts.total === 0
                     ? "Il database è vuoto. Utilizza il pulsante 'Inizializza Database' in alto."
-                    : "Prova a modificare i filtri per visualizzare altri contatti."}
+                    : "Prova a modificare i filtri o la ricerca per visualizzare altri contatti."}
                 </p>
               </div>
             </div>
