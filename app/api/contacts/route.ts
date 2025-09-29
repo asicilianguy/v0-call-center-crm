@@ -55,7 +55,7 @@ export async function GET(request: Request) {
     // Ottieni i contatti paginati con i filtri applicati
     const contacts = await db.collection("contacts")
       .find(filters)
-      .skip(skip)  // Qui è dove viene usata la variabile skip
+      .skip(skip)
       .limit(pageSize)
       .toArray();
     
@@ -105,5 +105,51 @@ export async function GET(request: Request) {
   } catch (error) {
     console.error("Failed to fetch contacts:", error);
     return NextResponse.json({ error: "Failed to fetch contacts", details: String(error) }, { status: 500 });
+  }
+}
+
+export async function POST(request: Request) {
+  try {
+    const body = await request.json();
+    const client = await clientPromise;
+    const db = client.db("consignment");
+    
+    // Handle single contact or array of contacts
+    if (Array.isArray(body)) {
+      // Batch insert
+      const result = await db.collection("contacts").insertMany(body);
+      return NextResponse.json({ inserted: result.insertedCount });
+    } else {
+      // Single contact insert
+      const result = await db.collection("contacts").insertOne(body);
+      return NextResponse.json({ inserted: result.acknowledged ? 1 : 0, id: result.insertedId });
+    }
+  } catch (error) {
+    console.error("Failed to insert contacts:", error);
+    return NextResponse.json({ error: "Failed to insert contacts", details: String(error) }, { status: 500 });
+  }
+}
+
+export async function PUT(request: Request) {
+  try {
+    const body = await request.json();
+    const { id, ...updates } = body;
+    
+    const client = await clientPromise;
+    const db = client.db("consignment");
+    
+    const result = await db.collection("contacts").updateOne(
+      { id: id },
+      { $set: { ...updates, updatedAt: new Date().toISOString() } }
+    );
+    
+    if (result.matchedCount === 0) {
+      return NextResponse.json({ error: "Contact not found" }, { status: 404 });
+    }
+    
+    return NextResponse.json({ updated: result.modifiedCount });
+  } catch (error) {
+    console.error("Failed to update contact:", error);
+    return NextResponse.json({ error: "Failed to update contact", details: String(error) }, { status: 500 });
   }
 }
