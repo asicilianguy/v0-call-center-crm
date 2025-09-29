@@ -7,23 +7,50 @@ export async function GET() {
     const client = await clientPromise;
     const db = client.db("consignment");
     
-    // Ottieni il conteggio totale
-    const total = await db.collection("contacts").countDocuments({});
+    // Usa aggregation pipeline per ottenere conteggi accurati in una sola query
+    const stats = await db.collection("contacts").aggregate([
+      {
+        $group: {
+          _id: null,
+          total: { $sum: 1 },
+          non_contattato: { 
+            $sum: { $cond: [{ $eq: ["$phone_status", "non_contattato"] }, 1, 0] } 
+          },
+          non_ha_risposto: { 
+            $sum: { $cond: [{ $eq: ["$phone_status", "non_ha_risposto"] }, 1, 0] } 
+          },
+          da_richiamare: { 
+            $sum: { $cond: [{ $eq: ["$phone_status", "da_richiamare"] }, 1, 0] } 
+          },
+          contattato: { 
+            $sum: { $cond: [{ $eq: ["$phone_status", "contattato"] }, 1, 0] } 
+          }
+        }
+      }
+    ]).toArray();
     
-    // Ottieni i conteggi per ogni stato di chiamata
-    const non_contattato = await db.collection("contacts").countDocuments({ phone_status: "non_contattato" });
-    const non_ha_risposto = await db.collection("contacts").countDocuments({ phone_status: "non_ha_risposto" });
-    const da_richiamare = await db.collection("contacts").countDocuments({ phone_status: "da_richiamare" });
-    const contattato = await db.collection("contacts").countDocuments({ phone_status: "contattato" });
+    // Estrai i risultati o utilizza valori predefiniti se vuoti
+    const result = stats.length > 0 ? stats[0] : {
+      total: 0,
+      non_contattato: 0,
+      non_ha_risposto: 0,
+      da_richiamare: 0,
+      contattato: 0
+    };
     
-    // Restituisci i conteggi
-    return NextResponse.json({
-      total,
-      non_contattato,
-      non_ha_risposto,
-      da_richiamare,
-      contattato
-    });
+    // Rimuovi il campo _id che è stato aggiunto dall'aggregazione
+    delete result._id;
+    
+    // Crea la risposta con i dati
+    const response = NextResponse.json(result);
+    
+    // Imposta gli header per evitare completamente il caching
+    response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+    response.headers.set('Pragma', 'no-cache');
+    response.headers.set('Expires', '0');
+    response.headers.set('Surrogate-Control', 'no-store');
+    
+    return response;
   } catch (error) {
     console.error("Failed to fetch contact stats:", error);
     return NextResponse.json(
