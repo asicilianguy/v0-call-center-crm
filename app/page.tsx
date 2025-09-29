@@ -577,7 +577,7 @@ Proporre una collaborazione commerciale per la vendita di orologi da parete in s
       </div>
 
       {/* Bottone fisso per accedere alla modale della guida */}
-      <div className="fixed bottom-4 right-4 z-50 shadow-lg rounded-lg overflow-hidden">
+      <div className="fixed right-4 z-50 shadow-lg rounded-lg overflow-hidden" style={{bottom: '9vh'}}>
         <Button 
           onClick={handleOpenGuide} 
           variant="secondary"
