@@ -16,14 +16,19 @@ export async function GET() {
     const da_richiamare = await db.collection("contacts").countDocuments({ phone_status: "da_richiamare" });
     const contattato = await db.collection("contacts").countDocuments({ phone_status: "contattato" });
     
-    // Restituisci i conteggi
-    return NextResponse.json({
+    // Crea la risposta con i dati
+    const response = NextResponse.json({
       total,
       non_contattato,
       non_ha_risposto,
       da_richiamare,
       contattato
     });
+    
+    // Imposta gli header per evitare il caching
+    response.headers.set('Cache-Control', 'no-store, max-age=0');
+    
+    return response;
   } catch (error) {
     console.error("Failed to fetch contact stats:", error);
     return NextResponse.json(
