@@ -235,6 +235,37 @@ export default function CRMPage() {
     contattato: 0,
   })
 
+  // Funzione per ricaricare le statistiche usando la route unificata
+  const fetchContactStats = async () => {
+    try {
+      // Usa la route unificata con il parametro statsOnly=true
+      const timestamp = new Date().getTime()
+      const response = await fetch(`/api/contacts?statsOnly=true&_t=${timestamp}`, {
+        cache: 'no-store',
+        headers: {
+          'Cache-Control': 'no-cache',
+          'Pragma': 'no-cache'
+        }
+      })
+      
+      if (response.ok) {
+        const stats = await response.json()
+        console.log('[PAGE] Stats received:', stats)
+        setContactCounts({
+          total: stats.total || 0,
+          non_contattato: stats.non_contattato || 0,
+          non_ha_risposto: stats.non_ha_risposto || 0,
+          da_richiamare: stats.da_richiamare || 0,
+          contattato: stats.contattato || 0,
+        })
+      }
+    } catch (error) {
+      console.error("Errore nel caricamento delle statistiche:", error)
+    }
+  }
+
+
+
   // Carica i contatti dal database
   useEffect(() => {
     async function fetchContacts() {
@@ -280,27 +311,6 @@ export default function CRMPage() {
     fetchContactStats()
   }, [currentPage, pageSize, sortBy, filters, searchQuery])
 
-  // Funzione per caricare le statistiche
-// Nel componente React
-const fetchContactStats = async () => {
-  try {
-    // Aggiungi un timestamp per evitare la cache
-    const timestamp = new Date().getTime();
-    const response = await fetch(`/api/contacts/stats?t=${timestamp}`);
-    if (response.ok) {
-      const stats = await response.json();
-      setContactCounts({
-        total: stats.total || 0,
-        non_contattato: stats.non_contattato || 0,
-        non_ha_risposto: stats.non_ha_risposto || 0,
-        da_richiamare: stats.da_richiamare || 0,
-        contattato: stats.contattato || 0,
-      });
-    }
-  } catch (error) {
-    console.error("Errore nel recupero delle statistiche:", error);
-  }
-}
 
   // Handler per l'aggiornamento di un contatto
   const handleContactUpdate = async (contactId: string, updates: Partial<Contact>) => {
