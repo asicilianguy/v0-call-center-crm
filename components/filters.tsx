@@ -38,6 +38,12 @@ const redirectLabels: Record<RedirectStatus | "tutti", string> = {
   no: "Non Reindirizzato",
 }
 
+const pinnedLabels: Record<string, string> = {
+  tutti: "Tutti i Contatti",
+  true: "Solo Fissati",
+  false: "Solo Non Fissati",
+}
+
 export function Filters({ filters, onFiltersChange, contactCounts }: FiltersProps) {
   return (
     <div className="bg-card p-4 rounded-lg border mb-6">
@@ -107,22 +113,52 @@ export function Filters({ filters, onFiltersChange, contactCounts }: FiltersProp
               </SelectContent>
             </Select>
           </div>
+
+          <div className="min-w-[200px]">
+            <label className="text-sm font-medium text-foreground mb-2 block">Fissati</label>
+            <Select
+              value={String(filters.isPinned)}
+              onValueChange={(value) =>
+                onFiltersChange({
+                  ...filters,
+                  isPinned: value === "tutti" ? "tutti" : value === "true",
+                })
+              }
+            >
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="tutti">Tutti i Contatti</SelectItem>
+                <SelectItem value="true">Solo Fissati</SelectItem>
+                <SelectItem value="false">Solo Non Fissati</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         </div>
 
-        <div className="flex flex-wrap gap-2">
-          <Badge variant="outline" className="text-sm">
-            Totale: {contactCounts.total}
-          </Badge>
-          <Badge variant="secondary" className="text-sm">
-            Non Contattati: {contactCounts.non_contattato}
-          </Badge>
-          <Badge variant="secondary" className="text-sm bg-blue-100 text-blue-800">
-            Da Richiamare: {contactCounts.da_richiamare}
-          </Badge>
-          <Badge variant="secondary" className="text-sm bg-green-100 text-green-800">
-            Contattati: {contactCounts.contattato}
+        {/* Badge con conteggio totale */}
+        <div className="flex items-center gap-2">
+          <Badge variant="outline" className="text-base px-3 py-1">
+            Totale: <strong className="ml-1">{contactCounts.total}</strong>
           </Badge>
         </div>
+      </div>
+
+      {/* Contatori per stato */}
+      <div className="flex flex-wrap gap-2 mt-4 pt-4 border-t">
+        <Badge variant="secondary" className="bg-gray-100 text-gray-800">
+          Non Contattati: {contactCounts.non_contattato}
+        </Badge>
+        <Badge variant="secondary" className="bg-yellow-100 text-yellow-800">
+          Non Ha Risposto: {contactCounts.non_ha_risposto}
+        </Badge>
+        <Badge variant="secondary" className="bg-blue-100 text-blue-800">
+          Da Richiamare: {contactCounts.da_richiamare}
+        </Badge>
+        <Badge variant="secondary" className="bg-green-100 text-green-800">
+          Contattati: {contactCounts.contattato}
+        </Badge>
       </div>
     </div>
   )

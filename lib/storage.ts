@@ -92,6 +92,7 @@ export async function loadContactsFromCSV(): Promise<Contact[]> {
           reindirizzato: null,
           note: "",
           callbackAt: null,
+          isPinned: false,
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
         };

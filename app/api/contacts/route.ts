@@ -34,6 +34,11 @@ export async function GET(request: Request) {
       filters.reindirizzato = searchParams.get('reindirizzato');
     }
     
+    // Aggiungi filtro isPinned
+    if (searchParams.get('isPinned') && searchParams.get('isPinned') !== 'tutti') {
+      filters.isPinned = searchParams.get('isPinned') === 'true';
+    }
+    
     // Aggiungi la ricerca testuale se presente
     if (searchQuery) {
       // Cerca in più campi utilizzando una query $or di MongoDB
@@ -65,6 +70,11 @@ export async function GET(request: Request) {
     switch (sortBy) {
       case "updateStatus":
         sortedContacts.sort((a, b) => {
+          // I contatti pinnati vengono sempre mostrati per primi
+          if (a.isPinned !== b.isPinned) {
+            return a.isPinned ? -1 : 1;
+          }
+          
           const aUpdated = a.updatedAt !== a.createdAt;
           const bUpdated = b.updatedAt !== b.createdAt;
           
@@ -79,21 +89,33 @@ export async function GET(request: Request) {
         break;
       
       case "updatedNewest":
-        sortedContacts.sort((a, b) => 
-          new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
-        );
+        sortedContacts.sort((a, b) => {
+          // I contatti pinnati vengono sempre mostrati per primi
+          if (a.isPinned !== b.isPinned) {
+            return a.isPinned ? -1 : 1;
+          }
+          return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();
+        });
         break;
       
       case "updatedOldest":
-        sortedContacts.sort((a, b) => 
-          new Date(a.updatedAt).getTime() - new Date(b.updatedAt).getTime()
-        );
+        sortedContacts.sort((a, b) => {
+          // I contatti pinnati vengono sempre mostrati per primi
+          if (a.isPinned !== b.isPinned) {
+            return a.isPinned ? -1 : 1;
+          }
+          return new Date(a.updatedAt).getTime() - new Date(b.updatedAt).getTime();
+        });
         break;
       
       case "name":
-        sortedContacts.sort((a, b) => 
-          a.azienda.localeCompare(b.azienda)
-        );
+        sortedContacts.sort((a, b) => {
+          // I contatti pinnati vengono sempre mostrati per primi
+          if (a.isPinned !== b.isPinned) {
+            return a.isPinned ? -1 : 1;
+          }
+          return a.azienda.localeCompare(b.azienda);
+        });
         break;
     }
     
@@ -116,12 +138,20 @@ export async function POST(request: Request) {
     
     // Handle single contact or array of contacts
     if (Array.isArray(body)) {
-      // Batch insert
-      const result = await db.collection("contacts").insertMany(body);
+      // Batch insert - assicuriamoci che isPinned sia presente
+      const contactsWithDefaults = body.map(contact => ({
+        ...contact,
+        isPinned: contact.isPinned ?? false
+      }));
+      const result = await db.collection("contacts").insertMany(contactsWithDefaults);
       return NextResponse.json({ inserted: result.insertedCount });
     } else {
-      // Single contact insert
-      const result = await db.collection("contacts").insertOne(body);
+      // Single contact insert - assicuriamoci che isPinned sia presente
+      const contactWithDefaults = {
+        ...body,
+        isPinned: body.isPinned ?? false
+      };
+      const result = await db.collection("contacts").insertOne(contactWithDefaults);
       return NextResponse.json({ inserted: result.acknowledged ? 1 : 0, id: result.insertedId });
     }
   } catch (error) {

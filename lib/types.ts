@@ -14,6 +14,7 @@ export interface Contact {
   reindirizzato: RedirectStatus
   note: string
   callbackAt: string | null
+  isPinned: boolean
   createdAt: string
   updatedAt: string
 }
@@ -22,4 +23,5 @@ export interface FilterState {
   phone_status: PhoneStatus | "tutti"
   interesse: InterestLevel | "tutti"
   reindirizzato: RedirectStatus | "tutti"
+  isPinned: boolean | "tutti"
 }

@@ -207,12 +207,9 @@ export default function CRMPage() {
   // Stati per i contatti e UI
   const [contacts, setContacts] = useState<Contact[]>([])
   const [loading, setLoading] = useState(true)
-  const [activeTab, setActiveTab] = useState<"script" | "guida">("script")
   const [sortBy, setSortBy] = useState<string>("updateStatus")
   const crmContainerRef = useRef<HTMLDivElement>(null)
   
-  // Stato per la modale degli script
-  const [isGuideOpen, setIsGuideOpen] = useState(false)
   
   // Stato per la ricerca
   const [searchQuery, setSearchQuery] = useState("")
@@ -373,10 +370,7 @@ const fetchContactStats = async () => {
     setCurrentPage(1) // Reset alla prima pagina quando cambia la ricerca
   }
 
-  // Handler per mostrare la modale della guida
-  const handleOpenGuide = () => {
-    setIsGuideOpen(true)
-  }
+  
 
   // Inizializza il database con i dati CSV
   const handleInitializeDatabase = async () => {
@@ -408,141 +402,7 @@ const fetchContactStats = async () => {
     }
   }
 
-  // Contenuto dello script di chiamata
-  const TESTO_SCRIPT =`Tu: 
-"Buongiorno [nome negozio], sono Francesca, con chi ho il piacere di parlare? è il/la titolare del negozio? 
-(pausa, ascolta la risposta) 
-
-Tu: 
-"Perfetto, la disturbo solo un minuto... ci tengo a dirle che non sono un call center, ma la contatto per proporle una collaborazione pensata proprio per valorizzare la sua attività." 
-
-Tu: 
-"Nasciamo come vetreria, in attività da oltre vent'anni, ad oggi siamo anche un brand emergente di artigianato italiano che realizza orologi da parete in specchio, interamente su misura. 
-Non si tratta di semplici orologi, ma di pezzi unici, autentici complementi d'arredo, che possono essere personalizzati dal nostro sito con anteprime realistiche in ogni fase della creazione." 
-
-Tu: 
-"Per lei non ci sono acquisti di magazzino né burocrazie: ogni orologio viene realizzato solo su ordinazione. 
-In questo modo può distinguersi, offrendo ai suoi clienti un prodotto esclusivo, innovativo e che non troveranno altrove." 
-
-Tu: 
-"tramite questa collaborazione potrà usufruire del 20% di sconto base su ogni orologio, che diventerà il suo guadagno diretto. Oltre a un guadagno dovuto all'offerta di servizi aggiuntivi in negozio di cui i clienti nel nostro sito non potranno usufruire (consulenza sul tipo di colore che si abbina di più con gli interni , oppure il montaggio), aumentando quindi il valore percepito potendo così aumentare ulteriormente il costo dell'orologio. 
-E per i primi 100 orologi venduti riconosciamo anche un ulteriore 30% di sconto extra." 
-
-SITO: antoniorologi.it 
-
-DOMANDE POSSIBILI: 
-"Domanda: "Come fatturate gli ordini?" 
-Risposta: 
-
-"Ogni ordine viene fatturato regolarmente con partita IVA e codice fiscale aziendale. La fattura elettronica viene emessa al momento della spedizione e inviata anche via email per comodità. Non ci sono costi nascosti né spese aggiuntive." 
-
-Domanda: "In quanto tempo riceviamo l'orologio?" 
-Risposta: 
-
-"I tempi standard sono di 7–10 giorni lavorativi dalla conferma dell'ordine, perché ogni orologio viene realizzato e rifinito artigianalmente. Il nostro sistema permette di avere una stima calcolata dinamicamente in base al numero di ordini che abbiamo da fare garantendo così una stima dei tempi più realistica possibile. 
-
-Domanda: "Come spedite i prodotti?" 
-Risposta: 
-
-"Spediamo con UPS, imballaggi rinforzati e sempre con assicurazione inclusa. Al momento della spedizione riceverete il tracking per seguire la consegna in tempo reale.è importante controllare subito le condizioni del prodotto alla consegna e segnalarci eventuali danni entro 2 giorni lavorativi. In questo modo apriamo immediatamente la pratica di assicurazione con il corriere e procediamo con la sostituzione. 
-Il costo delle spedizioni è già compreso nella nostra offerta partner per l'italia. 
-
-Domanda: "Come possiamo pagare gli ordini?" 
-Risposta: 
-
-"I metodi di pagamento sono mostrati al momento dell'acquisto, si puó pagare tramite carta anche a rate con klarna. 
-
-Domanda: Esiste la possibilità di fare il reso? 
-
-Risposta: il reso é possibile in caso di evidenti difetti o nel caso in cui arrivi rotto ,per tutti gli altri motivi non è possibile richiedere il reso dato che un prodotto personalizzato e quindi realizzato su misura." 
-
-Gestione delle Obiezioni Comuni 
-• "Non ho tempo per gestire un altro fornitore." 
-Risposta: "Capisco; proprio per questo il nostro processo è semplice e veloce, senza necessità di magazzino o contratti complessi." 
-• "Non conosciamo ancora il vostro brand." 
-Risposta: "Il nostro focus è costruire relazioni durature: con una chiamata iniziale può familiarizzare con la qualità e la professionalità che offriamo." 
-• "Temo costi nascosti." 
-Risposta: "L'unico costo è il prezzo di listino, da cui vi verrà scontato il 20%. Non ci sono spese aggiuntive né di attivazione." 
-
-Chiusura e Prossimi Passi 
-1. Richiesta di Impegno: 
-• "Le mando un link con accesso alla piattaforma dove può esplorare il tutto e una guida semplice sulle funzionalità del sito, così se ne fa un'idea diretta. Poi ci risentiamo tra qualche giorno nel caso in cui abbia ulteriori dubbi, va bene per Lei?" 
-2. Conferma e formazione: 
-• inviare il manuale d'uso del sito e il link del sito. 
-3. Ringraziamenti: 
-• "La ringrazio per il suo tempo. Rimango a disposizione per qualsiasi domanda. Buona giornata!"`
-
-  // Contenuto della guida
-  const TESTO_GUIDA =  `GUIDA COMPLETA OPERATORE CALL CENTER
-
-📞 PREPARAZIONE ALLA CHIAMATA
-- Verifica nome azienda e numero di telefono
-- Prepara il tono di voce professionale ma amichevole
-- Tieni a portata di mano tutte le informazioni sul prodotto
-
-🎯 OBIETTIVO DELLA CHIAMATA
-Proporre una collaborazione commerciale per la vendita di orologi da parete in specchio personalizzati, realizzati artigianalmente in Italia.
-
-💼 INFORMAZIONI AZIENDA
-- Vetreria attiva da oltre 20 anni
-- Brand emergente di artigianato italiano
-- Specializzati in orologi da parete in specchio su misura
-- Sito web: antoniorologi.it
-
-🔥 PUNTI DI FORZA DEL PRODOTTO
-- Pezzi unici, non reperibili altrove
-- Personalizzazione completa con anteprime realistiche
-- Realizzazione solo su ordinazione (no magazzino)
-- Complementi d'arredo di alta qualità
-
-💰 PROPOSTA COMMERCIALE
-- 20% di sconto base su ogni orologio (= guadagno diretto partner)
-- Servizi aggiuntivi in negozio per aumentare il valore
-- 30% di sconto extra sui primi 100 orologi venduti
-- Nessun costo di attivazione o spese nascoste
-
-⚡ VANTAGGI PER IL PARTNER
-- Nessun acquisto di magazzino
-- Nessuna burocrazia complessa
-- Prodotto esclusivo per distinguersi
-- Guadagno immediato su ogni vendita
-- Possibilità di offrire servizi aggiuntivi (consulenza colori, montaggio)
-
-📋 PROCESSO OPERATIVO
-1. Partner riceve ordine dal cliente
-2. Ordine viene trasmesso a noi
-3. Realizziamo l'orologio in 7-10 giorni lavorativi
-4. Spediamo con UPS, imballaggio rinforzato e assicurazione
-5. Fatturazione regolare con P.IVA
-
-🛡️ GARANZIE E SICUREZZA
-- Fatturazione elettronica regolare
-- Spedizione assicurata inclusa nel prezzo
-- Tracking in tempo reale
-- Reso possibile solo per difetti o danni durante trasporto
-- Controllo qualità su ogni pezzo
-
-📞 GESTIONE OBIEZIONI COMUNI
-"Non ho tempo per un altro fornitore"
-→ "Il nostro processo è semplice e veloce, senza magazzino o contratti complessi"
-
-"Non conosciamo il vostro brand"
-→ "Il nostro focus è costruire relazioni durature, può familiarizzare con una chiamata iniziale"
-
-"Temo costi nascosti"
-→ "L'unico costo è il prezzo di listino meno il 20%. Nessuna spesa aggiuntiva"
-
-✅ CHIUSURA EFFICACE
-1. Inviare link piattaforma e guida funzionalità
-2. Programmare ricontatto tra qualche giorno
-3. Ringraziare per il tempo dedicato
-4. Rimanere disponibili per domande
-
-🎯 METRICHE DI SUCCESSO
-- Interesse mostrato durante la chiamata
-- Richiesta di maggiori informazioni
-- Accettazione invio materiali
-- Programmazione secondo contatto`
+ 
 
   return (
     <main className="container mx-auto py-4 px-4 relative">
@@ -590,19 +450,7 @@ Proporre una collaborazione commerciale per la vendita di orologi da parete in s
         </Card>
       </div>
 
-      {/* Bottone fisso per accedere alla modale della guida */}
-      <div className="fixed right-4 z-50 shadow-lg rounded-lg overflow-hidden" style={{bottom: '9vh'}}>
-        <Button 
-          onClick={handleOpenGuide} 
-          variant="secondary"
-          size="lg"
-          className="flex items-center gap-2"
-        >
-          <BookOpen className="h-5 w-5" />
-          <span className="hidden sm:inline">Consulta Script e Guide</span>
-          <span className="inline sm:hidden">Guide</span>
-        </Button>
-      </div>
+
 
       {/* Contenuto principale - sempre visibile */}
       <div className="flex flex-col">
@@ -669,34 +517,7 @@ Proporre una collaborazione commerciale per la vendita di orologi da parete in s
         </div>
       </div>
 
-      {/* Modale per Script e Guida */}
-      <Dialog open={isGuideOpen} onOpenChange={setIsGuideOpen}>
-        <DialogContent className="max-w-4xl h-[80vh] flex flex-col">
-          <DialogHeader>
-            <DialogTitle className="text-xl">Guide e Script di Chiamata</DialogTitle>
-          </DialogHeader>
-          <div className="flex-1 overflow-hidden">
-            <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as "script" | "guida")}>
-              <TabsList className="mb-4">
-                <TabsTrigger value="script">Script di Chiamata</TabsTrigger>
-                <TabsTrigger value="guida">Guida e FAQ</TabsTrigger>
-              </TabsList>
-              <TabsContent value="script" className="mt-4 h-[calc(80vh-150px)]">
-                <ScrollArea className="h-full pr-4">
-                  <div className="whitespace-pre-line font-medium">{TESTO_SCRIPT}</div>
-                </ScrollArea>
-              </TabsContent>
-              <TabsContent value="guida" className="mt-4 h-[calc(80vh-150px)]">
-                <ScrollArea className="h-full pr-4">
-                  <div className="prose max-w-none">
-                    <div className="whitespace-pre-line">{TESTO_GUIDA}</div>
-                  </div>
-                </ScrollArea>
-              </TabsContent>
-            </Tabs>
-          </div>
-        </DialogContent>
-      </Dialog>
+    
     </main>
   )
 }

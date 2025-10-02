@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Badge } from "@/components/ui/badge"
-import { Phone, Globe, MapPin, Calendar, Clock } from "lucide-react"
+import { Phone, Globe, MapPin, Calendar, Pin } from "lucide-react"
 import type { Contact, PhoneStatus, InterestLevel, RedirectStatus } from "@/lib/types"
 
 interface ContactCardProps {
@@ -70,12 +70,24 @@ export function ContactCard({ contact, onUpdate }: ContactCardProps) {
     onUpdate(contact.id, { reindirizzato })
   }
 
+  const handleTogglePin = () => {
+    onUpdate(contact.id, { isPinned: !contact.isPinned })
+  }
+
   return (
-    <Card className="w-full mb-4">
+    <Card className={`w-full mb-4 ${contact.isPinned ? 'border-2 border-amber-400 bg-amber-50/30' : ''}`}>
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between">
           <div className="flex-1">
-            <CardTitle className="text-lg font-semibold text-foreground mb-2">{contact.azienda}</CardTitle>
+            <div className="flex items-center gap-2 mb-2">
+              <CardTitle className="text-lg font-semibold text-foreground">{contact.azienda}</CardTitle>
+              {contact.isPinned && (
+                <Badge variant="outline" className="bg-amber-100 text-amber-800 border-amber-300">
+                  <Pin className="w-3 h-3 mr-1" />
+                  Fissato
+                </Badge>
+              )}
+            </div>
             <div className="flex flex-wrap gap-2 text-sm text-muted-foreground">
               <div className="flex items-center gap-1">
                 <Phone className="w-4 h-4" />
@@ -104,7 +116,18 @@ export function ContactCard({ contact, onUpdate }: ContactCardProps) {
               )}
             </div>
           </div>
-          <Badge className={phoneStatusColors[contact.phone_status]}>{phoneStatusLabels[contact.phone_status]}</Badge>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleTogglePin}
+              className={contact.isPinned ? "text-amber-600 hover:text-amber-700 hover:bg-amber-100" : "text-muted-foreground hover:text-foreground"}
+              title={contact.isPinned ? "Rimuovi fissaggio" : "Fissa in alto"}
+            >
+              <Pin className={`w-4 h-4 ${contact.isPinned ? 'fill-current' : ''}`} />
+            </Button>
+            <Badge className={phoneStatusColors[contact.phone_status]}>{phoneStatusLabels[contact.phone_status]}</Badge>
+          </div>
         </div>
       </CardHeader>
 
@@ -200,31 +223,10 @@ export function ContactCard({ contact, onUpdate }: ContactCardProps) {
           <Textarea
             value={note}
             onChange={(e) => handleNoteChange(e.target.value)}
-            placeholder="Aggiungi note o impressioni sulla chiamata..."
+            placeholder="Aggiungi note sulla chiamata..."
             className="min-h-[80px]"
           />
         </div>
-        {/* Aggiungi questo alla fine della CardContent, prima della sua chiusura */}
-{contact.updatedAt && (
-  <div className="mt-2 text-xs text-muted-foreground flex items-center justify-end">
-    <Clock className="h-3 w-3 mr-1" />
-    Ultimo aggiornamento: {new Date(contact.updatedAt).toLocaleString('it-IT', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    })}
-  </div>
-)}
-
-        {/* Info callback se programmata */}
-        {contact.callbackAt && (
-          <div className="flex items-center gap-2 text-sm text-muted-foreground bg-blue-50 p-2 rounded">
-            <Clock className="w-4 h-4" />
-            <span>Richiamata programmata: {new Date(contact.callbackAt).toLocaleString("it-IT")}</span>
-          </div>
-        )}
       </CardContent>
     </Card>
   )
